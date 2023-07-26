@@ -2,9 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
-
-place_into_separate_private_file = "b58b9c81654d669f620aac75a0a1d83e"
-Tampa_url = f"https://api.openweathermap.org/data/3.0/onecall?lat=28.0589&lon=-82.4139&exclude=minutely,alerts&appid={place_into_separate_private_file}"
+from important_private_keys import openweathermap_key
+Tampa_url = f"https://api.openweathermap.org/data/3.0/onecall?lat=28.0589&lon=-82.4139&exclude=minutely,alerts&appid={openweathermap_key}"
 Tampa_return = requests.get(Tampa_url)
 print(Tampa_return.status_code) #number designates if workign or not
 
