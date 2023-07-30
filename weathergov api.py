@@ -1,3 +1,7 @@
+#This api webscraper utilizes the weather.gov api to pull info regarding current and near future
+#information on windspeed and time for predetermined locations 
+
+
 #https://www.weather.gov/documentation/services-web-api <<< page on how to access API info
 import requests
 import re
@@ -5,7 +9,6 @@ from pathlib import Path
 import os
 import pprint
 #from bs4 import BeautifulSoup - not needed because format of page is not organized in HTML format
-
 
 #Available locations: ----------------------------------------------------------------------------------------------
 #Tampa:  https://api.weather.gov/points/28.0589,-82.4139 
@@ -29,7 +32,7 @@ def getlocation():
     location = "wichita".lower() #change to input later
 
     while location != (("wichita") or ("tampa") or "1"):
-        location = input("You may have entered the wrong place. Please enter a valid input or type 1 to stop")
+        location = input("You may have entered the wrong place. Please enter a valid input or type 1 to stop: ")
 
     if location == "tampa":
         url = "https://api.weather.gov/gridpoints/TBW/72,102/forecast/hourly"
@@ -49,7 +52,7 @@ doc = request(url)
 
 #creating backup of response results in case of debugging 
 def tempsaveHTML(doc):
-    with open("results_tempsavefile.txt","w") as file: #saving results in case of error
+    with open("weathergov_tempsavefile.txt","w") as file: #saving results in case of error
         file.write(doc)
     #pprint.pprint(json.loads(results.content)) #in case for debuggin
 tempsaveHTML(doc)
@@ -115,14 +118,16 @@ time_dict = {
 
 #relocating save file
 def relocate(location,today):
-    source_file = Path("C:/Users/avboy/Documents/GitHub - Personal/results_tempsavefile.txt") #will mess up if changing computers with different names
-    destination_file = Path(f"C:/Users/avboy/Documents/GitHub - Personal/Weather-API-webscraper/weathergov request savefiles/{location} {today}.txt")
+    source_file = Path("C:/Users/avboy/Documents/GitHub - Personal/weathergov_tempsavefile.txt") #will mess up if changing computers with different names
+    destination_file = Path(f"C:/Users/avboy/Documents/GitHub - Personal/Weather-API-webscraper/save files/weathergov req savefiles/{location} {today}.txt")
 #                    ^^^^^ needs to be changed based on device pathing
     #if file aready exists, alter name
     n=1
     while os.path.isfile(destination_file) is True:
-        destination_file = Path(f"C:/Users/avboy/Documents/GitHub - Personal/Weather-API-webscraper/weathergov request savefiles/{location} {today}({n}).txt")
+        destination_file = Path(f"C:/Users/avboy/Documents/GitHub - Personal/Weather-API-webscraper/save files/weathergov req savefiles/{location} {today}({n}).txt")
         n+=1
+
+
 
     source_file.rename(destination_file)
 
@@ -171,21 +176,23 @@ if f'{today} 8:00' in time_list:
 else: #if at a later time than 8am
     current_hour_index = time_list.index(f'{today} {current_hour}')
 
-    print(f"current wind speed: {all_windspeeds[current_hour_index]} at {current_hour}")
+    print(f"current wind speed: {all_windspeeds[current_hour_index]} at {time_dict[current_hour]}")
 
 
 #--- mid-day all_windspeeds (10am-3pm) ---
-#10am earliest time
-if f'{today} 10:00' in time_list: 
-    am_index = time_list.index(f'{today} 10:00')
+if f'{today} 15:00' in time_list:
+    #10am earliest time
+    if f'{today} 10:00' in time_list: 
+        am_index = time_list.index(f'{today} 10:00')
+    else:
+        am_index = time_list.index(f'{today} {current_hour}')
+
+    three_pm_index = time_list.index(f'{today} 15:00')
+
+    max_mid_day_windspeed = max(windspeed_ints[am_index:three_pm_index])
+    print(f"The max windspeed around lunchtime will be {max_mid_day_windspeed}mph today.")
 else:
-    am_index = time_list.index(f'{today} {current_hour}')
-
-three_pm_index = time_list.index(f'{today} 15:00')
-
-max_mid_day_windspeed = max(windspeed_ints[am_index:three_pm_index])
-print(f"The max windspeed around lunchtime will be {max_mid_day_windspeed}mph today.")
-
+    pass
 #--- first instance of today's max windspeed and the associated time ---
 max_speed = max(todays_windspeed_ints)
 max_speed_index = todays_windspeed_ints.index(max_speed)
@@ -205,4 +212,10 @@ def max_hour():
     return hour
 todays_max_hour = max_hour()
 
-print(f"Today's max speed will be {max_speed}mph and will happen at {todays_max_hour}.")
+print(f"Today's max speed will be {max_speed}mph at {time_dict[todays_max_hour]}.")
+
+
+
+#-=-=-=-=-=- tomorrow's max speed throughout the day -=-=-=-=-=-
+
+
