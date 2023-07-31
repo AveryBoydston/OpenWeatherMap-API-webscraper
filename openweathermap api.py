@@ -13,43 +13,44 @@ class OpenWeatherMap:
     def getkey(self):
         return self.__key
 
-    # def getlatlong(self):
-    #     self._city = input("Enter a city name:").replace(" ","_")
-    #     while True:
-    #         try: #using try block since user input may not be valid
-    #             self._cityurl = f"http://api.openweathermap.org/geo/1.0/direct?q={self._city}&appid={self.getkey()}"
+    def getlatlong(self):
+        self._city = input("Enter a city name:").replace(" ","_")
+        while True:
+            try: #using try block since user input may not be valid
+                self._cityurl = f"http://api.openweathermap.org/geo/1.0/direct?q={self._city}&appid={self.getkey()}"
 
-    #             req = requests.get(self._cityurl)
-    #             if req.text == "[]":
-    #                 raise Exception
-    #             if req.status_code==200:
-    #                 break
-    #             else:
-    #                 raise Exception
-                   
-    #         except Exception:
-    #             print(f"An error occurred when accessing the city's url. Recheck spelling. ")
-    #             self._city = input("Reinput the city name: ")
-    #             continue
-
-    #     city_info = re.compile(r'"country":.+[^\}\]]')
-    #     while True:
-    #         match = city_info.findall(req.text)
-    #         verify_ct = input(f"Is {self._city} located in {match[0]} correct? Enter yes or no: ")
-    #         verify_ct = verify_ct.lower()
-
-    #         while verify_ct != ("yes" and "no"):
-    #             verify_ct = input("Please enter yes or no:").lower()
-    #         if verify_ct == ("no"):
-    #             self._city = input("Enter a different city name:").replace(" ","_")
-    #             continue
-    #         elif verify_ct == ("yes"):
-    #             break
-    #     print("yay!")
-                 
+                req = requests.get(self._cityurl)
+                if req.status_code==200:
+                    pass
+                if req.text == "[]":
+                    raise Exception
+                                    
+                city_info = re.compile(r'"country":.+[^\}\]]')
+                match = city_info.search(req.text)
+                verify_ct = input(f"Is {self._city} located in {match.group()} correct? Enter yes or no: ").lower()
             
+                while verify_ct !="yes" and verify_ct !="no":
+                    verify_ct = input("Please enter yes or no:").lower()
+                if verify_ct == ("no"):
+                    self._city = input("Enter a different city name:").replace(" ","_")
+                    continue
+                if verify_ct == ("yes"):
+                    break
 
-        
+            except Exception:
+                print(f"An error occurred when accessing the city's url. Recheck spelling.\
+                        \nReturn Code:{req.status_code}\
+                        \nReturn text: {req.text}\n")
+                self._city = input("Enter a different city name:").replace(" ","_")
+                continue
+        print("yay!")
+        print(req.text)
+        lat_pattern = re.compile(r'("lat":)([-\d.]+)')
+        lon_pattern = re.compile(r'("lon":)([-\d.]+)')
+
+        self._lat_match = lat_pattern.search(req.text).group(2)
+        self._lon_match =  lon_pattern.search(req.text).group(2)
+        print(self._lat_match,self._lon_match)
 
 
 
@@ -131,15 +132,10 @@ class OpenWeatherMap:
 
 
 test_object = OpenWeatherMap()
-#test_object.getlatlong()
+test_object.getlatlong()
 doc = test_object.OWMap_getrequest()
 test_object.gettime()
 test_object.OWMapResultsBackup()
 test_object.getuvindex()
 test_object.getwindspeed()
 test_object.CleanBackupResults()
-
-
-
-
-
