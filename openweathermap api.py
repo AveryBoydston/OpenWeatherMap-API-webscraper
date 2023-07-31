@@ -1,5 +1,5 @@
 import sys
-import datetime
+from datetime import datetime
 import requests
 import re
 sys.path.insert(0, 'C:/Users/avboy/Documents/GitHub - Personal/')
@@ -43,21 +43,14 @@ class OpenWeatherMap:
                         \nReturn text: {req.text}\n")
                 self._city = input("Enter a different city name:").replace(" ","_")
                 continue
-        print("yay!")
-        print(req.text)
         lat_pattern = re.compile(r'("lat":)([-\d.]+)')
         lon_pattern = re.compile(r'("lon":)([-\d.]+)')
 
-        self._lat_match = lat_pattern.search(req.text).group(2)
-        self._lon_match =  lon_pattern.search(req.text).group(2)
-        print(self._lat_match,self._lon_match)
-
+        self._lat = lat_pattern.search(req.text).group(2)
+        self._long =  lon_pattern.search(req.text).group(2)
 
 
     def OWMap_getrequest(self):
-        self._lat = 28.0589
-        self._long = -82.4139
-
         self._url = f"https://api.openweathermap.org/data/3.0/onecall?lat={self._lat}&lon={self._long}&exclude=daily,minutely,alerts&appid={self.getkey()}"
         req = requests.get(self._url)
         if req.status_code == 200:
@@ -74,28 +67,34 @@ class OpenWeatherMap:
     def gettime(self):
         global current_time,time_list,unixtime_list
 
-        #converting unicode time "dt" to readable time
-        unixcode_timestamp = re.compile(r'"dt":\d{10}')
-        matches = unixcode_timestamp.findall(self._doc)
+        #converting unicode time code to a readable time
+        unixcode_timestamp = re.compile(r'("dt":)(\d{10})')
+        matches = unixcode_timestamp.finditer(self._doc)
 
-        unixtime_list = [int(item.replace('"dt":','')) for item in matches]
+        unixtime_list = [match.group(2) for match in matches]
 
-        time_list = [] #list of readable times
-        for time in unixtime_list:
-            dt = datetime.datetime.fromtimestamp(time)
-            time_list.append(dt)
+        #list of readable times
+        time_list = [datetime.fromtimestamp(int(time)) for time in unixtime_list] 
 
         current_time = time_list[0]
         
-        # for time in times[1:-1]:
-        #     print(time)
+    
+        #list of today's hours remaining
+
+        today_finder = re.compile(r'\d{4}-\d{2}-\d{2}')
+        todays_date = today_finder.search(str(time_list[0]))
+        print(todays_date.group())
+
+
+
         return current_time,time_list,unixtime_list
+
 
     def getuvindex(self):
         global uvindex_list
-        uvi_pattern = re.compile(r'"uvi":\d[\d.]*')
-        matches = uvi_pattern.findall(self._doc)
-        uvindex_list = [(index.replace('"uvi":','')) for index in matches]
+        uvi_pattern = re.compile(r'("uvi":)(\d[\d.]*)')
+        matches = uvi_pattern.finditer(self._doc)
+        uvindex_list = [match.group(2) for match in matches]
         return uvindex_list
 
     def gettodaymaxuv(self):
