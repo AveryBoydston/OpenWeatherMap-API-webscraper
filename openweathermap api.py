@@ -2,9 +2,8 @@ import sys
 import datetime
 import requests
 import re
-import important_private as i
 sys.path.insert(0, 'C:/Users/avboy/Documents/GitHub - Personal/')
-
+import important_private as i
 
 class OpenWeatherMap:
     def __init__(self):
@@ -13,6 +12,46 @@ class OpenWeatherMap:
 
     def getkey(self):
         return self.__key
+
+    # def getlatlong(self):
+    #     self._city = input("Enter a city name:").replace(" ","_")
+    #     while True:
+    #         try: #using try block since user input may not be valid
+    #             self._cityurl = f"http://api.openweathermap.org/geo/1.0/direct?q={self._city}&appid={self.getkey()}"
+
+    #             req = requests.get(self._cityurl)
+    #             if req.text == "[]":
+    #                 raise Exception
+    #             if req.status_code==200:
+    #                 break
+    #             else:
+    #                 raise Exception
+                   
+    #         except Exception:
+    #             print(f"An error occurred when accessing the city's url. Recheck spelling. ")
+    #             self._city = input("Reinput the city name: ")
+    #             continue
+
+    #     city_info = re.compile(r'"country":.+[^\}\]]')
+    #     while True:
+    #         match = city_info.findall(req.text)
+    #         verify_ct = input(f"Is {self._city} located in {match[0]} correct? Enter yes or no: ")
+    #         verify_ct = verify_ct.lower()
+
+    #         while verify_ct != ("yes" and "no"):
+    #             verify_ct = input("Please enter yes or no:").lower()
+    #         if verify_ct == ("no"):
+    #             self._city = input("Enter a different city name:").replace(" ","_")
+    #             continue
+    #         elif verify_ct == ("yes"):
+    #             break
+    #     print("yay!")
+                 
+            
+
+        
+
+
 
     def OWMap_getrequest(self):
         self._lat = 28.0589
@@ -57,13 +96,26 @@ class OpenWeatherMap:
         matches = uvi_pattern.findall(self._doc)
         uvindex_list = [(index.replace('"uvi":','')) for index in matches]
         return uvindex_list
-    
+
+    def gettodaymaxuv(self):
+        pass
+
     def getwindspeed(self):
         global windspeed_list
         ws_pattern = re.compile(r'"wind_speed":\d[\d.]*')
         matches = ws_pattern.findall(self._doc)
         windspeed_list = [(match.replace('"wind_speed":','')) for match in matches]
         return windspeed_list      
+
+    def getmorningws(self):
+        pass
+
+    def getmaxmiddayws(self):
+        pass
+
+    def todaymaxws(self):
+        pass
+
 
     def CleanBackupResults(self):
         with open(f'C:/Users/avboy/Documents/GitHub - Personal/Weather-API-webscraper/save files/openweathermap req savefiles/Results {(str(current_time)).replace(":","H",1).replace(":","M",1)}S.txt',"w") as file:
@@ -79,6 +131,7 @@ class OpenWeatherMap:
 
 
 test_object = OpenWeatherMap()
+#test_object.getlatlong()
 doc = test_object.OWMap_getrequest()
 test_object.gettime()
 test_object.OWMapResultsBackup()
@@ -90,32 +143,3 @@ test_object.CleanBackupResults()
 
 
 
-
-
-
-
-
-
-# def getlocation_latlong(self):
-#     self._location = "wichita"
-#     GoogleSearch = f"https://www.google.com/search?q{self._location.replace(' ','+')}+longitude+latitude"
-#     GSreq = requests.get(GoogleSearch)
-
-#     if GSreq.status_code != 200:
-    #         print(f"An error occurred when sending a get request to {GoogleSearch}. Error code: {GSreq.status_code}")
-    #         quit()
-#     else:
-            # self._GSdoc = BeautifulSoup(GSreq.text,"html.parser")
-
-            # self.locationbackup() #saves a local copy of the HTML
-
-            # self._div = (self._GSdoc).find_all(class_="Z0LcW t2b5Cf")
-            # print(self._div)
-
-#            return self._GSdoc,lat,long
-
-
-# def locationbackup(self):
-#     with open("C:/Users/avboy/Documents/GitHub - Personal/Weather-API-webscraper/save files/openweathermap req savefiles/test.txt","w") as file:
-#         self._GS_HTML = (self._GSdoc).prettify()
-#         file.write(self._GS_HTML)
