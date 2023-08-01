@@ -3,7 +3,7 @@ from datetime import datetime
 import requests
 import re
 sys.path.insert(0, 'C:/Users/avboy/Documents/GitHub - Personal/')
-import important_private as i
+import personal_private as i
 
 class OpenWeatherMap:
     def __init__(self):
@@ -51,7 +51,7 @@ class OpenWeatherMap:
 
 
     def OWMap_getrequest(self):
-        self._url = f"https://api.openweathermap.org/data/3.0/onecall?lat={self._lat}&lon={self._long}&exclude=daily,minutely,alerts&appid={self.getkey()}"
+        self._url = f"https://api.openweathermap.org/data/3.0/onecall?lat={self._lat}&lon={self._long}&exclude=daily,minutely,alerts&units=imperial&appid={self.getkey()}"
         req = requests.get(self._url)
         if req.status_code == 200:
             self._doc = req.text #not using BeautifulSoup due to formatting of API results
@@ -81,9 +81,11 @@ class OpenWeatherMap:
     
         #list of today's hours remaining
 
-        today_finder = re.compile(r'\d{4}-\d{2}-\d{2}')
-        todays_date = today_finder.search(str(time_list[0]))
-        print(todays_date.group())
+        today_date_finder = re.compile(r'\d{4}-\d{2}-\d{2}')
+        todays_date = today_date_finder.search(str(time_list[0]))
+        
+        todays_date_hours = re.compile(r'{todays_date_hours}')
+#        todays_date_hours = 
 
 
 
