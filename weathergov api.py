@@ -8,6 +8,10 @@ import re
 from pathlib import Path
 import os
 import pprint
+import sys
+sys.path.insert(0, 'C:/Users/avboy/Documents/GitHub - Personal/')
+from Personal.computer import directory
+
 #from bs4 import BeautifulSoup - not needed because format of page is not organized in HTML format
 
 #Available locations: ----------------------------------------------------------------------------------------------
@@ -118,13 +122,13 @@ time_dict = {
 
 #relocating save file
 def relocate(location,today):
-    source_file = Path("C:/Users/avboy/Documents/GitHub - Personal/weathergov_tempsavefile.txt") #will mess up if changing computers with different names
-    destination_file = Path(f"C:/Users/avboy/Documents/GitHub - Personal/Weather-API-webscraper/save files/weathergov req savefiles/{location} {today}.txt")
+    source_file = Path(f"{directory}/Documents/GitHub - Personal/weathergov_tempsavefile.txt") #will mess up if changing computers with different names
+    destination_file = Path(f"{directory}/Documents/GitHub - Personal/Weather-API-webscraper/save files/weathergov req savefiles/{location} {today}.txt")
 #                    ^^^^^ needs to be changed based on device pathing
     #if file aready exists, alter name
     n=1
     while os.path.isfile(destination_file) is True:
-        destination_file = Path(f"C:/Users/avboy/Documents/GitHub - Personal/Weather-API-webscraper/save files/weathergov req savefiles/{location} {today}({n}).txt")
+        destination_file = Path(f"{directory}/Documents/GitHub - Personal/Weather-API-webscraper/save files/weathergov req savefiles/{location} {today}({n}).txt")
         n+=1
 
 
