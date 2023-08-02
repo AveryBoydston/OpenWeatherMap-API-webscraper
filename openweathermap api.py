@@ -6,6 +6,7 @@ import re
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}')
 import Private.personal_private as i
+from getlocation import latitude,longitude,city,cityinfo
 #----------------------------------------------------------------------------
 
 class OpenWeatherMap:
@@ -16,46 +17,9 @@ class OpenWeatherMap:
     def getkey(self):
         return self.__key
 
-    def getlatlong(self):
-        self._city = input("Enter a city name:").replace(" ","_")
-        while True:
-            try: #using try block since user input may not be valid
-                self._cityurl = f"http://api.openweathermap.org/geo/1.0/direct?q={self._city}&appid={self.getkey()}"
-
-                req = requests.get(self._cityurl)
-                if req.status_code==200:
-                    pass
-                if req.text == "[]":
-                    raise Exception
-                                    
-                city_info = re.compile(r'"country":.+[^\}\]]')
-                match = city_info.search(req.text)
-                verify_ct = input(f"Is {self._city} located in {match.group()} correct? Enter yes or no: ").lower()
-            
-                while verify_ct !="yes" and verify_ct !="no":
-                    verify_ct = input("Please enter yes or no:").lower()
-                if verify_ct == ("no"):
-                    self._city = input("Enter a different city name:").replace(" ","_")
-                    continue
-                if verify_ct == ("yes"):
-                    break
-
-            except Exception:
-                print(f"An error occurred when accessing the city's url. Recheck spelling.\
-                        \nReturn Code:{req.status_code}\
-                        \nReturn text: {req.text}\n")
-                self._city = input("Enter a different city name:").replace(" ","_")
-                continue
-        lat_pattern = re.compile(r'("lat":)([-\d.]+)')
-        lon_pattern = re.compile(r'("lon":)([-\d.]+)')
-
-        self._lat = lat_pattern.search(req.text).group(2)
-        self._long =  lon_pattern.search(req.text).group(2)
-
-
     def OWMap_getrequest(self):
-        self._lat = 37.6922
-        self._long = -97.3375        
+        self._lat = latitude
+        self._long = longitude        
 
         self._url = f"https://api.openweathermap.org/data/3.0/onecall?lat={self._lat}&lon={self._long}&exclude=daily,minutely,alerts&units=imperial&appid={self.getkey()}"
         req = requests.get(self._url)
@@ -160,6 +124,7 @@ class OpenWeatherMap:
     def BackupResults(self):
         with open(f'{directory}/Weather-API-webscraper/save files/openweathermap req savefiles/Results {(str(self.data["time"][0])).replace(":","H",1).replace(":","M",1)}S.txt',"w") as file:
             #current data
+            file.write(f"City:{city} in {cityinfo}\n\n")
             file.write("Current Data:\n" + "-"*40 + "\n")
             file.write(f"unix time:{self.unixtime_list[0]}\n")
             for item in self.data:
@@ -204,7 +169,6 @@ class OpenWeatherMap:
 
 
 test_object = OpenWeatherMap()
-#test_object.getlatlong()
 doc = test_object.OWMap_getrequest()
 test_object.getspecifiedinfo(["temp","feels like","pressure","humidity","dew_point","uvindex","clouds","visibility","wind speed","wind deg","wind gust","pop"])
 #"temp","feels like","pressure","humidity","dew_point","uvi","clouds","visibility","wind_speed","wind_deg","wind_gust","pop"

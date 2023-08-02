@@ -1,18 +1,75 @@
-#This api webscraper utilizes the weather.gov api to pull info regarding current and near future
-#information on windspeed and time for predetermined locations 
-
-
 #https://www.weather.gov/documentation/services-web-api <<< page on how to access API info
+import os
+import sys
+from datetime import datetime
 import requests
 import re
-from pathlib import Path
-import os
-import pprint
-import sys
-sys.path.insert(0, 'C:/Users/avboy/Documents/GitHub - Personal/')
-from Personal.computer import directory
+from pickcomputer import directory
+sys.path.insert(0, f'{directory}/')
+from getlocation import latitude,longitude,city,cityinfo
 
-#from bs4 import BeautifulSoup - not needed because format of page is not organized in HTML format
+
+class WeatherGov:
+    def __init__(self):
+        pass
+
+
+
+    def latlong_getrequest(self):
+        self._url = f"https://api.weather.gov/points/{latitude},{longitude}"
+
+        req = requests.get(self._url)
+        if req.status_code == 200:
+            self.doc1 = req.text
+            return self.doc1
+        else:            
+            print(f"An error occurred when sending a get request to OpenWeatherMap's api. Error code:{req.status_code}")
+            quit()
+    
+    def grid_getrequest(self):
+#        global id,x,y
+        gridID_pattern = re.compile(r'("gridId": ")(.*)(")')
+        gridID = gridID_pattern.finditer(self.doc1)
+        for match in gridID:
+            id = match.group(2)
+            print(id)
+        gridX_pattern = re.compile(r'("gridX": )(\d*)')
+        gridX = gridX_pattern.finditer(self.doc1)
+        for match in gridX:
+            x = match.group(2)
+            print(x)
+        gridY_pattern = re.compile(r'("gridY": )(\d*)')
+        gridY = gridY_pattern.finditer(self.doc1)
+        for match in gridY:
+            y = match.group(2)
+            print(y)
+        self._url2 = f"https://api.weather.gov/gridpoints/{id}/{x},{y}/forecast/hourly"
+
+        req = requests.get(self._url2)
+        if req.status_code == 200:
+            self.doc2 = req.text
+            return self.doc2,
+        else:            
+            print(f"An error occurred when sending a get request to OpenWeatherMap's api. Error code:{req.status_code}")
+            quit()
+    
+
+        
+
+
+
+a = WeatherGov()
+a.latlong_getrequest()
+a.grid_getrequest()
+
+
+
+
+
+
+
+
+
 
 #Available locations: ----------------------------------------------------------------------------------------------
 #Tampa:  https://api.weather.gov/points/28.0589,-82.4139 
@@ -31,7 +88,7 @@ from Personal.computer import directory
 
 #----------------------------------------------------------------------------------------------
 #variable location choosing
-
+'''
 def getlocation():
     location = "wichita".lower() #change to input later
 
@@ -223,3 +280,4 @@ print(f"Today's max speed will be {max_speed}mph at {time_dict[todays_max_hour]}
 #-=-=-=-=-=- tomorrow's max speed throughout the day -=-=-=-=-=-
 
 
+'''
