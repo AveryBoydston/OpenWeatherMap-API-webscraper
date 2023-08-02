@@ -3,19 +3,7 @@ import sys
 from datetime import datetime
 import requests
 import re
-from flask import json
-
-def pickcomputer(): #when changing which computer I'm using
-    global directory
-    if os.path.exists("C:/Users/avboy/"): #laptop
-        directory = "C:/Users/avboy/"
-    elif os.path.exists("C:/Users/Avery B/"): #pc
-        directory = "C:/Users/Avery B/"
-    
-    return directory
-pickcomputer()
-
-sys.path.insert(0, f'{directory}/Documents/GitHub - Personal/')
+from pickcomputer import directory
 sys.path.insert(0, f'{directory}')
 import Private.personal_private as i
 #----------------------------------------------------------------------------
