@@ -16,6 +16,7 @@ def pickcomputer(): #when changing which computer I'm using
 pickcomputer()
 
 sys.path.insert(0, f'{directory}/Documents/GitHub - Personal/')
+sys.path.insert(0, f'{directory}')
 import Private.personal_private as i
 #----------------------------------------------------------------------------
 
@@ -168,30 +169,35 @@ class OpenWeatherMap:
 
         return self.max_ws,self.hour_of_max_ws
 
-    def test(self):
-        print(self.todaydata["time"])
-        print(len(self.todaydata["time"]))
-        # self.time_of_max_ws = self.todaydata["time"][(self.todaydata["wind speed"]).index(self.max_ws)]
-        # max_ws_pattern = re.compile(r'\d{2}:\d{2}')
-        # max_ws_time = max_ws_pattern.search(self.time_of_max_ws)
-        # print(f"time_of_max_ws: {self.time_of_max_ws}")
-        # print(f"max_ws_time: {max_ws_time.group()}")
-
     def BackupResults(self):
-        with open(f'{directory}/Documents/GitHub - Personal/Weather-API-webscraper/save files/openweathermap req savefiles/Results {(str(self.data["time"][0])).replace(":","H",1).replace(":","M",1)}S.txt',"w") as file:
+        with open(f'{directory}/Weather-API-webscraper/save files/openweathermap req savefiles/Results {(str(self.data["time"][0])).replace(":","H",1).replace(":","M",1)}S.txt',"w") as file:
             #current data
-            file.write("current:\n")
+            file.write("Current Data:\n" + "-"*40 + "\n")
+            file.write(f"unix time:{self.unixtime_list[0]}\n")
+            for item in self.data:
+                if item == "precip" or item == "wind gust":
+                    pass
+                else:
+                    file.write(f"{item}:{self.data[item][0]}\n")
+            
+            file.write("\n\n")
+            
 
-            file.write(f"unix:{str(self.unixtime_list[0])} datetime:{str(self.todays_date)}\n\
-                        max uvindex: {self.max_uvindex_today} at {self.hour_of_max_uvindex_today}\n\
-                        max windspeed:{self.max_ws} at {self.hour_of_max_ws}\n\n")
-            
-            
+            #Extra data
+            file.write("Extra Data:\n" + "-"*40 + "\n")
+            file.write(f"Today's Max UVindex: {self.max_uvindex_today} at {self.hour_of_max_uvindex_today}\n")
+            file.write(f"Daytime Windspeed High: {self.max_ws}mph at {self.hour_of_max_ws}")
+#            file.write(f"")
+
+
+            file.write("\n\n\n")
+
+
             #hourly data
-            file.write("hourly:\n")
+            file.write("Hourly:\n" + "-"*40 + "\n")
             n=1
 
-            while n!=len(self.todaydata["time"])+3:
+            while n!=len(self.todaydata["time"]): #self.data or self.todaydata if you only want todays info
                 file.write(f"unix time:{self.unixtime_list[n]}\n")
                 for item in self.data:
                     if item == "precip" or item == "wind gust":
@@ -218,7 +224,6 @@ test_object.gettodaysdate()
 test_object.gettodaysinfo()
 test_object.gettodaymaxuvindex()
 test_object.getmaxws()
-test_object.test()
 test_object.BackupResults()
 
 
