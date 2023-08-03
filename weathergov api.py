@@ -7,15 +7,13 @@ import re
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}/')
 from getlocation import latitude,longitude,city,cityinfo
-
+#----------------------------------------------------------------------------
 
 class WeatherGov:
     def __init__(self):
         pass
 
-
-
-    def latlong_getrequest(self):
+    def latlong_getrequest(self): #have to go through 2 urls for this api 
         self._url = f"https://api.weather.gov/points/{latitude},{longitude}"
 
         req = requests.get(self._url)
@@ -27,7 +25,6 @@ class WeatherGov:
             quit()
     
     def grid_getrequest(self):
-#        global id,x,y
         gridID_pattern = re.compile(r'("gridId": ")(.*)(")')
         gridID = gridID_pattern.finditer(self.doc1)
         for match in gridID:
@@ -53,8 +50,8 @@ class WeatherGov:
             print(f"An error occurred when sending a get request to OpenWeatherMap's api. Error code:{req.status_code}")
             quit()
     
-
-        
+    
+    
 
 
 

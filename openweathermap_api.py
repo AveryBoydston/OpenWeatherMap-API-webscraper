@@ -68,10 +68,12 @@ class OpenWeatherMap:
 
 
     def gettodaysdate(self):
+        global current_time
         current_time = str(self.data["time"][0]) #the first data point is current info
+    #    current_time_index = self.data["time"]
         today_date_pattern = re.compile(r'\d{4}-\d{2}-\d{2}')
         self.todays_date = today_date_pattern.search(current_time).group()
-        return self.todays_date
+        return self.todays_date,current_time
     
     def gettodaysinfo(self):
         #find index for all remaining hours of today 
@@ -172,13 +174,12 @@ test_object = OpenWeatherMap()
 doc = test_object.OWMap_getrequest()
 test_object.getspecifiedinfo(["temp","feels like","pressure","humidity","dew_point","uvindex","clouds","visibility","wind speed","wind deg","wind gust","pop"])
 #"temp","feels like","pressure","humidity","dew_point","uvi","clouds","visibility","wind_speed","wind_deg","wind_gust","pop"
-test_object.gettodaysdate()
+
+test_object.gettodaysdate() #assigned to var to import to other files
 test_object.gettodaysinfo()
 test_object.gettodaymaxuvindex()
 test_object.getmaxws()
 test_object.BackupResults()
-
-
 
 
 
