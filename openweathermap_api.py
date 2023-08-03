@@ -1,4 +1,3 @@
-import os
 import sys
 from datetime import datetime
 import requests
@@ -63,7 +62,6 @@ class OpenWeatherMap:
 
             self.data[item] = temp_list
 
-            #"temp","feels like","pressure","humidity","dew_point","uvi","clouds","visibility","wind_speed","wind_deg","wind_gust","pop"
         return self.data,self.unixtime_list,time_list
 
 
@@ -172,8 +170,7 @@ class OpenWeatherMap:
 
 test_object = OpenWeatherMap()
 doc = test_object.OWMap_getrequest()
-test_object.getspecifiedinfo(["temp","feels like","pressure","humidity","dew_point","uvindex","clouds","visibility","wind speed","wind deg","wind gust","pop"])
-#"temp","feels like","pressure","humidity","dew_point","uvi","clouds","visibility","wind_speed","wind_deg","wind_gust","pop"
+test_object.getspecifiedinfo(["temp","feels like","humidity","uvindex","clouds","visibility","wind speed","wind deg","wind gust","pop"])
 
 test_object.gettodaysdate() #assigned to var to import to other files
 test_object.gettodaysinfo()
@@ -186,10 +183,8 @@ test_object.BackupResults()
 #hourly file writing debugging
                 # file.write(f"temp: {self.data['temp'][n]}\n")
                 # file.write(f"feels like: {self.data['feels like'][n]}\n")
-                # file.write(f"pressure: {self.data['pressure'][n]}\n")
                 # file.write(f"precip: {self.data['precip'][n-1]}\n")
                 # file.write(f"humidity: {self.data['humidity'][n]}\n")
-                # file.write(f"dew point: {self.data['dew_point'][n]}\n")
                 # file.write(f"uvindex: {self.data['uvindex'][n]}\n")
                 # file.write(f"clouds: {self.data['clouds'][n]}\n")
                 # file.write(f"visibility: {self.data['visibility'][n]}\n")
