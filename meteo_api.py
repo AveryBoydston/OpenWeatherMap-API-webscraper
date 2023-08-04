@@ -1,17 +1,17 @@
-#https://open-meteo.com/en/docs#latitude=37.6922&longitude=-97.3375&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,visibility,windspeed_10m,winddirection_10m,uv_index&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&models=best_match
+#https://open-meteo.com/en/docs#latitude=37.6922&longitude=-97.3375&hourly=temperature_2m,relativehumidity_2m,apparent_temperature,precipitation_probability,precipitation,visibility,windspeed_10m,winddirection_10m,windgusts_10m,uv_index&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&models=best_match
 import sys
 from datetime import datetime
 import requests
 from datetime import datetime
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}')
-import Private.personal_private as i
+import Private.WeatherAPI_private as i
 from getlocation import latitude,longitude,city,cityinfo
 #----------------------------------------------------------------------------
 
 class Meteo:
     def __init__(self):
-        # latitude = 37.6922361 for testing
+        # latitude = 37.6922361 #for testing
         # longitude = -97.3375448
         self._url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=temperature_2m,apparent_temperature,relativehumidity_2m,precipitation_probability,cloudcover,visibility,windspeed_10m,winddirection_10m,windgusts_10m,uv_index&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch&models=best_match"
 
@@ -23,7 +23,7 @@ class Meteo:
             self._hourly = self._doc['hourly']
             return self._doc,self._hourly
         else:
-            print(f"An error occurred when sending a get self._request to Meteo's api. Error code:{self._req.status_code}")
+            print(f"An error occurred when sending a get request to Meteo's api. Error code:{self._req.status_code}")
             quit()
     
     def getremaininghours(self):
@@ -35,7 +35,7 @@ class Meteo:
 
 
     def getspecifiedinfo(self,info):
-        apiname = {
+        apiterm = {
             "temp" : "temperature_2m",
             "feels like" : "apparent_temperature",
             "humidity": "relativehumidity_2m",
@@ -50,7 +50,8 @@ class Meteo:
         
         #writing info to save file
         with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/Meteo {city} {self.Date_and_CurrentHour.replace(":",".")}.txt',"w") as file:
-#            file.write(f"City: {city}\n\n")
+
+            file.write(f"City: {city} in {cityinfo}\n\n")
             #hourly data
             file.write("Hourly:\n" + "-"*40 + "\n")
 
@@ -58,7 +59,7 @@ class Meteo:
             while n!=24: #self.data or self._hourly['time'][self.DaCH_index:24] if you only want todays info
                 file.write(f"time:{self._hourly['time'][n]}\n")
                 for item in info:
-                    item_api = apiname[item]
+                    item_api = apiterm[item]
                     file.write(f"{item}:{self._hourly[item_api][n]}\n")
                 file.write("\n")
                 n+=1
@@ -90,16 +91,17 @@ class Meteo:
     def getmidday_ws(self):
         self.current_am = self.DaCH_index
         self.t11_am = self._hourly['time'].index(f"{datetime.now().strftime('%Y-%m-%d')} 11:00")
-
         self.t3_pm = self._hourly['time'].index(f"{datetime.now().strftime('%Y-%m-%d')} 15:00")
 
-        if self.current_am>=self.t11_am:
+        if self.current_am>self.t3_pm: #if accessing past 3pm
+            self.midday_ws = max(self._hourly["windspeed_10m"][self.t11_am:self.t3_pm])
+        elif self.current_am>=self.t11_am: #using current time if past 11 to only access current/future info
             self.midday_ws = max(self._hourly["windspeed_10m"][self.current_am:self.t3_pm])
-        elif self.t11_am>self.current_am:
+        elif self.t11_am>self.current_am: #if before 11
             self.midday_ws = max(self._hourly["windspeed_10m"][self.t11_am:self.t3_pm])
         return self.midday_ws
 
-    def getmax_ws(self):
+    def getmax_ws(self): #max windspeed from 8am to 11pm
         self.t8_am = self._hourly['time'].index(f"{datetime.now().strftime('%Y-%m-%d')} 08:00")
         self.max_ws = max(self._hourly["windspeed_10m"][self.t8_am:24])
         self.index_of_max_ws = self._hourly['windspeed_10m'].index(self.max_ws)

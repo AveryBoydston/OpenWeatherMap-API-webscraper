@@ -4,7 +4,7 @@ import requests
 import sys
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}/')
-import Private.personal_private as i
+import Private.WeatherAPI_private as i
 
 
 class Location:
