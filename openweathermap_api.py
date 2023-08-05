@@ -122,7 +122,7 @@ class OpenWeatherMap:
         return self.max_ws,self.hour_of_max_ws
 
     def BackupResults(self):
-        with open(f'{directory}/Weather-API-webscraper/save files/openweathermap req savefiles/Results {(str(self.data["time"][0])).replace(":","H",1).replace(":","M",1)}S.txt',"w") as file:
+        with open(f'{directory}/Weather-API-webscraper/save files/openweathermap req savefiles/{city} {(str(self.data["time"][0])).replace(":","H",1).replace(":","M",1)}S.txt',"w") as file:
             #current data
             file.write(f"City:{city} in {cityinfo}\n\n")
             file.write("Current Data:\n" + "-"*40 + "\n")
@@ -137,7 +137,7 @@ class OpenWeatherMap:
             
 
             #Extra data
-            file.write("Extra Data:\n" + "-"*40 + "\n")
+            file.write("Additional Info:\n" + "-"*40 + "\n")
             file.write(f"Today's Max UVindex: {self.max_uvindex_today} at {self.hour_of_max_uvindex_today}\n")
             file.write(f"Daytime Windspeed High: {self.max_ws}mph at {self.hour_of_max_ws}")
 #            file.write(f"")
@@ -162,8 +162,8 @@ class OpenWeatherMap:
             
 
             
-            file.write("\n\nAPI results:\n")
-            file.write("-"*80 + "\n\n")
+            file.write("\n\nAPI Results:\n")
+            file.write("-"*80 + "\n")
             file.write(self._doc)
 
 

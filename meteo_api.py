@@ -35,7 +35,7 @@ class Meteo:
 
 
     def getspecifiedinfo(self,info):
-        apiterm = {
+        apiterms = {
             "temp" : "temperature_2m",
             "feels like" : "apparent_temperature",
             "humidity": "relativehumidity_2m",
@@ -49,9 +49,10 @@ class Meteo:
         }
         
         #writing info to save file
-        with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/Meteo {city} {self.Date_and_CurrentHour.replace(":",".")}.txt',"w") as file:
+        with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/{city} {self.Date_and_CurrentHour.replace(":",".")}.txt',"w") as file:
 
             file.write(f"City: {city} in {cityinfo}\n\n")
+            
             #hourly data
             file.write("Hourly:\n" + "-"*40 + "\n")
 
@@ -59,14 +60,16 @@ class Meteo:
             while n!=24: #self.data or self._hourly['time'][self.DaCH_index:24] if you only want todays info
                 file.write(f"time:{self._hourly['time'][n]}\n")
                 for item in info:
-                    item_api = apiterm[item]
+                    item_api = apiterms[item]
                     file.write(f"{item}:{self._hourly[item_api][n]}\n")
                 file.write("\n")
                 n+=1
 
-    def getmaxuvindex(self):
-        self.max_uvindex_today = max(self._hourly['uv_index'][self.DaCH_index:24])
-        return self.max_uvindex_today
+    def getmaxuvindex(self): #today's max uvindex
+        self.max_uvindex = max(self._hourly['uv_index'][self.DaCH_index:24])
+        self.index_of_max_uvindex = self._hourly['uv_index'].index(self.max_uvindex)
+        self.time_of_max_uvindex = self._hourly['time'][self.index_of_max_uvindex].replace(f"{datetime.now().strftime('%Y-%m-%d')} ",'')
+        return self.max_uvindex,self.time_of_max_uvindex
 
     def getwindspeed(self):
         self.current_am = self.DaCH_index
@@ -93,9 +96,9 @@ class Meteo:
         self.t11_am = self._hourly['time'].index(f"{datetime.now().strftime('%Y-%m-%d')} 11:00")
         self.t3_pm = self._hourly['time'].index(f"{datetime.now().strftime('%Y-%m-%d')} 15:00")
 
-        if self.current_am>self.t3_pm: #if accessing past 3pm
+        if self.current_am>=self.t3_pm: #if accessing past 3pm
             self.midday_ws = max(self._hourly["windspeed_10m"][self.t11_am:self.t3_pm])
-        elif self.current_am>=self.t11_am: #using current time if past 11 to only access current/future info
+        elif self.current_am>self.t11_am: #using current time if past 11 to only access current/future info
             self.midday_ws = max(self._hourly["windspeed_10m"][self.current_am:self.t3_pm])
         elif self.t11_am>self.current_am: #if before 11
             self.midday_ws = max(self._hourly["windspeed_10m"][self.t11_am:self.t3_pm])
@@ -105,20 +108,20 @@ class Meteo:
         self.t8_am = self._hourly['time'].index(f"{datetime.now().strftime('%Y-%m-%d')} 08:00")
         self.max_ws = max(self._hourly["windspeed_10m"][self.t8_am:24])
         self.index_of_max_ws = self._hourly['windspeed_10m'].index(self.max_ws)
-        self.time_of_max_ws = self._hourly['time'][self.index_of_max_ws]
+        self.time_of_max_ws = self._hourly['time'][self.index_of_max_ws].replace(f"{datetime.now().strftime('%Y-%m-%d')} ",'')
         return self.max_ws,self.index_of_max_ws,self.time_of_max_ws
 
 
     def BackupMeteoResults(self):
-        with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/Meteo {city} {self.Date_and_CurrentHour.replace(":",".")}.txt',"a") as file:
-            file.write("\nExtra Data:\n" + "-"*40 + "\n")
-            file.write(f"Today's Max UV index: {self.getmaxuvindex()}\n")
-            file.write(f"Morning Windspeed:{self.getmorning_ws()}mph [before 11am]\n")
+        with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/{city} {self.Date_and_CurrentHour.replace(":",".")}.txt',"a") as file:
+            file.write("\nAdditional Info:\n" + "-"*40 + "\n")
+            file.write(f"Today's Max UV index: {self.getmaxuvindex()[0]} at {self.getmaxuvindex()[1]}\n")
+            file.write(f"Morning Windspeed:{self.getmorning_ws()}mph [8am-10am]\n")
             file.write(f"Mid-day Windspeed:{self.getmidday_ws()}mph [11am-3pm]\n")
             file.write(f"Today's Max Windspeed: {self.getmax_ws()[0]}mph at {self.getmax_ws()[2]}\n")
             
-            file.write("\n\nAPI results:\n")
-            file.write("-"*80 + "\n\n")
+            file.write("\n\nAPI Results:\n")
+            file.write("-"*80 + "\n")
             file.write(str(self._doc))
 
 
