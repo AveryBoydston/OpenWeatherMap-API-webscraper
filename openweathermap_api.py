@@ -122,7 +122,7 @@ class OpenWeatherMap:
         return self.max_ws,self.hour_of_max_ws
 
     def BackupResults(self):
-        with open(f'{directory}/Weather-API-webscraper/save files/openweathermap req savefiles/{city} {(str(self.data["time"][0])).replace(":","H",1).replace(":","M",1)}S.txt',"w") as file:
+        with open(f'{directory}/Weather-API-webscraper/save files/openweathermap req savefiles/{city} {datetime.now().strftime("%Y-%m-%d %H.%M")}.txt',"w") as file:
             #current data
             file.write(f"City:{city} in {cityinfo}\n\n")
             file.write("Current Data:\n" + "-"*40 + "\n")

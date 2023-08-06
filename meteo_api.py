@@ -49,14 +49,14 @@ class Meteo:
         }
         
         #writing info to save file
-        with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/{city} {self.Date_and_CurrentHour.replace(":",".")}.txt',"w") as file:
+        with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/{city} {datetime.now().strftime("%Y-%m-%d %H.%M")}.txt',"w") as file:
 
             file.write(f"City: {city} in {cityinfo}\n\n")
             
             #hourly data
             file.write("Hourly:\n" + "-"*40 + "\n")
 
-            n=self.DaCH_index
+            n=0 #or self.DaCH_index for current+rest of day
             while n!=24: #self.data or self._hourly['time'][self.DaCH_index:24] if you only want todays info
                 file.write(f"time:{self._hourly['time'][n]}\n")
                 for item in info:
@@ -113,7 +113,7 @@ class Meteo:
 
 
     def BackupMeteoResults(self):
-        with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/{city} {self.Date_and_CurrentHour.replace(":",".")}.txt',"a") as file:
+        with open(f'{directory}/Weather-API-webscraper/save files/meteo savefiles/{city} {datetime.now().strftime("%Y-%m-%d %H.%M")}.txt',"a") as file:
             file.write("\nAdditional Info:\n" + "-"*40 + "\n")
             file.write(f"Today's Max UV index: {self.getmaxuvindex()[0]} at {self.getmaxuvindex()[1]}\n")
             file.write(f"Morning Windspeed:{self.getmorning_ws()}mph [8am-10am]\n")
