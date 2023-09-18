@@ -1,0 +1,4 @@
+*.pyc
+*.txt
+/meteo_api.py
+/visualcrossing_api.py
