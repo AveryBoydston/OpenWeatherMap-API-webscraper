@@ -14,7 +14,7 @@ class OpenWeatherMap:
 
     def getkey(self):
         return self.__key
-    
+
     def chooselocation(self): #from getlocation module
         from getlocation import latitude,longitude,city,cityinfo
         self._city = city
@@ -22,25 +22,24 @@ class OpenWeatherMap:
         self._lat = latitude
         self._long = longitude
 
-    def defaultlocation(self):
+    def defaultlocation(self): #manually swap between Tampa and Wichita. Skips getlocation process
         Wichita = (-97.3375,37.6922,"Wichita")
         Tampa = (-82.4584,27.9477,"Tampa")
-        self._long = Wichita[0]
-        self._lat = Wichita[1]
-        self._city = Wichita[2]
+        self._long, self._lat = Tampa[0], Tampa[1]
+        self._city = Tampa[2]
 
     def OWMap_getrequest(self):
         self._url = f"https://api.openweathermap.org/data/3.0/onecall?lat={self._lat}&lon={self._long}&exclude=daily,minutely,alerts&units=imperial&appid={self.getkey()}"
         req = requests.get(self._url)
         if req.status_code == 200:
-            self._doc = req.json() #not using BeautifulSoup due to the formatting of the API results
-            return self._doc
+            self._doc = req.json() #not using BeautifulSoup4 due to the formatting of the API results
         else:
-            print(f"An error occurred when sending a get request to OpenWeatherMap's api. Error code:{req.status_code}")
+            print(f"An error occurred when sending a get request to OpenWeatherMap's api. Error code: {req.status_code}")
             quit()
 
-
-    def getspecifiedinfo(self,info):        
+    def getspecifiedinfo(self,info):
+        '''Dictionary converts inputted terms to accessible terms in the API results. The "with open..."
+            portion writes next 48 hours of data to a savefile in a predetermined save location.'''
         apiterms = {
             "temp" : "temp",
             "feels like" : "feels_like",
@@ -54,15 +53,15 @@ class OpenWeatherMap:
             "uv index" : "uvi"
         }
 
-        self.data = {}
-
-        with open(f'{directory}/Weather-API-webscraper/save files/openweathermap req savefiles/{self._city} {datetime.now().strftime("%Y-%m-%d %H.%M")}.txt',"w") as file:
-            file.write(f"City: {self._city}\n\n")# in {cityinfo}\n\n")
+        with open(f'{directory}/Weather_API_webscraper/save files/openweathermap req savefiles/{self._city} {datetime.now().strftime("%Y-%m-%d %H.%M")}.txt',"w") as file:
+            file.write(f"City: {self._city}")# in {cityinfo}\n\n")
+            file.write(f"\nCurrent time: {datetime.now()}\n\n")
 
             #hourly data
-            file.write("Hourly:\n" + "-"*40 + "\n")
+            file.write("Hourly Data:\n" + "-"*40 + "\n")
+            file.write("Temperature in Farenheit (F)\nWind Speed in miles per hour (mph)\n" + "-"*40 + "\n")
 
-            for n in range(0,48): #range function excludes terminating value, in this case 48
+            for n in range(0,48): #range function excludes terminating value. captures hours 0-47
                 file.write(f"unix time:{self._doc['hourly'][n]['dt']}\n")
                 file.write(f"datetime:{datetime.fromtimestamp(self._doc['hourly'][n]['dt'])}\n")
                 for item in info:
@@ -71,131 +70,182 @@ class OpenWeatherMap:
 
 
     def gettodaysindex(self):
-        global current_hour,remaining_hours_in_the_day
-        current_hour = datetime.fromtimestamp(self._doc['current']['dt']).strftime("%H") #only returns the hour value
-        remaining_hours_in_the_day = 24 - int(current_hour) #length/last index for remaining today's hours
+        self.current_hour = datetime.fromtimestamp(self._doc['current']['dt']).strftime("%H") #only returns the hour value
+        self.remaining_hours_in_the_day = 24 - int(self.current_hour) #length/last index for remaining today's hours
+
 
     def gettomorrowshoursindex(self):
         global lower_index_of_tomorrow_hours,upper_index_of_tomorrow_hours
-        lower_index_of_tomorrow_hours = remaining_hours_in_the_day+1
-        upper_index_of_tomorrow_hours = remaining_hours_in_the_day+23
-        print(f"last hour of tmrw: {datetime.fromtimestamp(self._doc['hourly'][upper_index_of_tomorrow_hours]['dt'])}")
-        print(upper_index_of_tomorrow_hours)
+        lower_index_of_tomorrow_hours = self.remaining_hours_in_the_day+1
+        upper_index_of_tomorrow_hours = self.remaining_hours_in_the_day+23
 
 
-    def gettodaymaxuvindex(self):
-        self.max_uvindex_today = max([self._doc['hourly'][i]['uvi'] for i in range(0,remaining_hours_in_the_day+1)])
+#functions to get different pieces of data. Each have their own ranges of times throughout the day, hence separate functions
+    def gettemperature(self): #current hour to 7pm (19:00)
+        self.temperature = max(self._doc['hourly'][i]['temp'] for i in range(0,lower_index_of_tomorrow_hours-4)) 
+
+        #finding index & hour of max temp
+        temp = 0
+        self.index_of_temperature = 0
+        for i in range(0,lower_index_of_tomorrow_hours-4):
+            temp = self._doc['hourly'][i]['temp']
+            if temp == self.temperature:
+                break
+            self.index_of_temperature += 1
+        self.hour_of_temperature = datetime.fromtimestamp(self._doc['hourly'][self.index_of_temperature]['dt'])
+
+
+    def getfeels_like(self): #current hour to 7pm (19:00)
+        self.feels_like = max(self._doc['hourly'][i]['feels_like'] for i in range(0,lower_index_of_tomorrow_hours-4)) 
+
+        #finding index & hour of max feels like temp
+        feels = 0
+        self.index_of_feels_like = 0
+        for i in range(0,lower_index_of_tomorrow_hours-4):
+            feels = self._doc['hourly'][i]['feels_like']
+            if feels == self.feels_like:
+                break
+            self.index_of_feels_like += 1
         
-        #finding hour of max uvindex:
-        for n in range(0,remaining_hours_in_the_day+1):
-            
-        pattern = re.compile(r'"uvi":[\.\d]')
-        matches = pattern.finditer(str(self._doc))
-        for match in matches:
-            print(match.group())
-#        self.hour_of_max_uvindex_today = self._doc['hourly'][i]['uvi']
+        self.hour_of_feels_like = datetime.fromtimestamp(self._doc['hourly'][self.index_of_feels_like]['dt'])
 
-        
-        # self.max_uvindex_today = max(self.todaydata["uvindex"])
-        # self.hour_of_max_uvindex_today = self.todaydata["time"][(self.todaydata["uvindex"]).index(self.max_uvindex_today)]
-        # return self.max_uvindex_today,self.hour_of_max_uvindex_today
 
-    def getmorning_ws(self):
-        current_am_lower_bound = self.todaydata["time"].index(self.todaydata["time"][0])
-        t11_am_upper_bound = self.todaydata["time"].index(f"{self.todays_date} 11:00")
+    def gettodaymaxuvindex(self): #all day
+        self.max_uvindex_today = max([self._doc['hourly'][i]['uvi'] for i in range(0,lower_index_of_tomorrow_hours)]) #range function excludes 00:00 of next day
 
-        self.morning_ws = max(self.todaydata["wind speed"][current_am_lower_bound:t11_am_upper_bound])
-        return self.morning_ws
-    
-    def getmiddayws(self):
-        current_lower_bound = self.todaydata["time"].index(self.todaydata["time"][0])
-        t3_pm_upper_bound = self.todaydata["time"].index(f"{self.todays_date} 15:00")
+        #finding index & hour of max uvindex
+        uv = 0
+        self.index_of_max_uvindex_today = 0
+        for i in range(0,lower_index_of_tomorrow_hours):
+            uv = self._doc['hourly'][i]['uvi']
+            if uv == self.max_uvindex_today:
+                break
+            self.index_of_max_uvindex_today += 1
 
-        self.midday_ws = max(self.todaydata["wind speed"][current_lower_bound:t3_pm_upper_bound])
-        return self.midday_ws    
+        self.hour_of_max_uvindex_today = datetime.fromtimestamp(self._doc['hourly'][self.index_of_max_uvindex_today]['dt'])
 
-    def getmaxws(self):
-        self.max_ws = max(self.todaydata["wind speed"])
-        time_of_max_ws = self.todaydata["time"][(self.todaydata["wind speed"]).index(self.max_ws)]
-        max_ws_pattern = re.compile(r'\d{2}:\d{2}')
-        self.hour_of_max_ws = (max_ws_pattern.search(time_of_max_ws)).group()
 
-        return self.max_ws,self.hour_of_max_ws
+    def getmorning_ws(self): #current hour to 11am (11:00)
+        self.morning_ws = max([self._doc['hourly'][i]['wind_speed'] for i in range(0,self.remaining_hours_in_the_day-12)])
+
+        #finding index & hour of morning windspeed
+        ws = 0
+        self.index_of_morning_ws = 0
+        for i in range(0,self.remaining_hours_in_the_day-12):
+            ws = self._doc['hourly'][i]['wind_speed']
+            if ws == self.morning_ws:
+                break
+            self.index_of_morning_ws += 1
+
+        self.hour_of_morning_ws = datetime.fromtimestamp(self._doc['hourly'][self.index_of_morning_ws]['dt'])
+
+
+    def getmiddayws(self): #current hour to 5pm (17:00)
+        self.midday_ws = max([self._doc['hourly'][i]['wind_speed'] for i in range(0,self.remaining_hours_in_the_day-6)])
+
+        #finding index & hour of first occurence of midday windspeed
+        ws = 0
+        self.index_of_midday_ws = 0
+        for i in range(0,self.remaining_hours_in_the_day-6):
+            ws = self._doc['hourly'][i]['wind_speed']
+            if ws == self.midday_ws:
+                break
+            self.index_of_midday_ws += 1
+
+        self.hour_of_midday_ws = datetime.fromtimestamp(self._doc['hourly'][self.index_of_midday_ws]['dt'])
+
+
+    def getmaxws(self): #all day
+        self.max_ws = max([self._doc['hourly'][i]['wind_speed'] for i in range(0,self.remaining_hours_in_the_day)])
+
+        #finding index & hour of first occurence of max windspeed
+        ws = 0
+        self.index_of_max_ws = 0
+        for i in range(0,self.remaining_hours_in_the_day):
+            ws = self._doc['hourly'][i]['wind_speed']
+            if ws == self.max_ws:
+                break
+            self.index_of_max_ws += 1
+
+        self.hour_of_max_ws = datetime.fromtimestamp(self._doc['hourly'][self.index_of_max_ws]['dt'])
+
+
+    def getwind_gust(self): #current hour to 5pm (17:00)
+        print("error occurred here.")
+        self.wind_gust = max([self._doc['hourly'][i]['wind_gust'] for i in range(0,self.remaining_hours_in_the_day-6)])
+
+        #finding index & hour of first occurence of wind gust value
+        gust = 0
+        self.index_of_wind_gust = 0
+        for i in range(0,self.remaining_hours_in_the_day-6):
+            gust = self._doc['hourly'][i]['wind_gust']
+            if gust == self.wind_gust:
+                break
+            self.index_of_wind_gust += 1
+
+        self.hour_of_wind_gust = datetime.fromtimestamp(self._doc['hourly'][self.index_of_wind_gust]['dt'])
+
+
+    def getprecip(self): #current hour to 5pm
+        self.precip = max([self._doc['hourly'][i]['pop'] for i in range(0,self.remaining_hours_in_the_day-6)])
+
+        #finding index & hour of first occurence of precipitation high
+        pop = 0
+        self.index_of_precip = 0
+        for i in range(0,self.remaining_hours_in_the_day-6):
+            pop = self._doc['hourly'][i]['pop']
+            if pop == self.precip:
+                break
+            self.index_of_precip += 1
+
+        self.hour_of_precip = datetime.fromtimestamp(self._doc['hourly'][self.index_of_precip]['dt'])
+
 
     def BackupResults(self):
-        with open(f'{directory}/Weather-API-webscraper/save files/openweathermap req savefiles/{self._city} {(str(self.data["time"][0])).replace(":","H",1).replace(":","M",1)}S.txt',"w") as file:
-            #current data
-            file.write(f"City:{self._city}")# in {self._cityinfo}\n\n")
-            file.write(f"unix time:{self.unixtime_list[0]}\n")
-            for item in self.data:
-                if item == "precip" or item == "wind gust":
-                    pass
-                else:
-                    file.write(f"{item}:{self.data[item][0]}\n")
-            
-            file.write("\n\n")
-            
+        with open(f'{directory}/Weather_API_webscraper/save files/openweathermap req savefiles/{self._city} {datetime.now().strftime("%Y-%m-%d %H.%M")}.txt',"a") as file:
 
             #Extra data
-            file.write("Additional Info:\n" + "-"*40 + "\n")
-            file.write(f"Today's Max UVindex: {self.max_uvindex_today} at {self.hour_of_max_uvindex_today}\n")
-            file.write(f"Daytime Windspeed High: {self.max_ws}mph at {self.hour_of_max_ws}")
-#            file.write(f"")
+            file.write("\nAdditional Info:\n" + "-"*40 + "\n")
+
+            file.write(f"Today's High (F): {self.temperature} at {self.hour_of_temperature.strftime('%H:%M')}\n")
+            file.write(f"Feels Like: {self.feels_like} at {self.hour_of_feels_like.strftime('%H:%M')}\n")
+            file.write(f"Today's Max UVindex: {self.max_uvindex_today} at {self.hour_of_max_uvindex_today.strftime('%H:%M')}\n")
+            if self.remaining_hours_in_the_day-12 > 0: #if 11am data exists
+                file.write(f"Max morning windspeed (7-11am): {self.morning_ws} at {self.hour_of_morning_ws}\n")
+            else:
+                file.write("It is already past 11am. No morning windspeed data.\n")
+
+            if self.remaining_hours_in_the_day-6 > 0: #if 5pm data exists
+                file.write(f"Mid-day windspeed (11am-5pm): {self.midday_ws} at {self.hour_of_midday_ws.strftime('%H:%M')}\n")
+            else:
+                file.write(f"current hour past 5pm: {self.current_hour}. No mid-day windspeed data.\n")
+
+            file.write(f"Today's Max Wind Speed: {self.max_ws} at {self.hour_of_max_ws.strftime('%H:%M')}\n")
+            file.write(f"Expect wind gusts of up to {self.wind_gust} at {self.hour_of_wind_gust.strftime('%H:%M')}\n")
+
+            if self.precip > 0.75: #75% chance
+                file.write(f"High chance of rain today: {self.precip} at {self.hour_of_precip.strftime('%H:%M')}\n")
+            else:
+                file.write(f"Don't expect rain today: {self.precip}")
 
 
-            file.write("\n\n\n")
-
-
-            #hourly data
-            file.write("Hourly:\n" + "-"*40 + "\n")
-            n=1
-
-            while n!=len(self.todaydata["time"]): #self.data or self.todaydata if you only want todays info
-                file.write(f"unix time:{self.unixtime_list[n]}\n")
-                for item in self.data:
-                    if item == "precip" or item == "wind gust":
-                        file.write(f"{item}:{self.data[item][n-1]}\n")
-                    else:
-                        file.write(f"{item}:{self.data[item][n]}\n")
-                file.write("\n")
-                n+=1
-            
-
-            
-            file.write("\n\nAPI Results:\n")
+            file.write("\n"*3)
+            file.write("API Results:\n")
             file.write("-"*80 + "\n")
-            file.write(self._doc)
+            file.write(str(self._doc))
 
+    def createmessage(self):
+        message= f'''Today's high: {self.temperature}°F\nFeels like: {self.feels_like}°F\nUVindex: {self.max_uvindex_today} at {self.hour_of_max_uvindex_today.strftime('%H:%M')}\n'''
 
-    def default_message(self):
-        message = "\n\
-            "
-        
-        print(message)
+        if self.remaining_hours_in_the_day-6 > 0:
+            if self.wind_gust >= 15:
+                message+= "NOT a good day to wear certain attire.\n"
+            message += f"Windspeed up to {self.midday_ws}mph at {self.hour_of_midday_ws.strftime('%H:%M')}\n"
+            message += f"with gusts of {self.wind_gust}mph at {self.hour_of_wind_gust.strftime('%H:%M')}\n"
 
+        if self.precip < 0.75:
+            message += f"No rain. {self.precip*100}% chance\n"
+        if self.precip >= 0.75:
+            message += f"might rain today. {self.precip*100}% chance\n"
 
-
-
-test_object = OpenWeatherMap()
-test_object.defaultlocation()
-doc = test_object.OWMap_getrequest()
-test_object.getspecifiedinfo(["temp","feels like","humidity","uv index","clouds","visibility","wind speed","wind dir","wind gust","precip"])
-test_object.gettodaysindex()
-test_object.gettomorrowshoursindex()
-test_object.gettodaymaxuvindex()
-test_object.getmaxws()
-test_object.BackupResults()
-
-
-
-#hourly file writing debugging
-                # file.write(f"temp: {self.data['temp'][n]}\n")
-                # file.write(f"feels like: {self.data['feels like'][n]}\n")
-                # file.write(f"precip: {self.data['precip'][n-1]}\n")
-                # file.write(f"humidity: {self.data['humidity'][n]}\n")
-                # file.write(f"uvindex: {self.data['uvindex'][n]}\n")
-                # file.write(f"clouds: {self.data['clouds'][n]}\n")
-                # file.write(f"visibility: {self.data['visibility'][n]}\n")
-                # file.write(f"wind speed: {self.data['wind speed'][n]}\n")
-                # file.write(f"wind deg: {self.data['wind deg'][n]}\n")
-                # file.write(f"wind gust: {self.data['wind gust'][n-1]}\n")
+        return message
