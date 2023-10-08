@@ -5,7 +5,7 @@ import requests
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}/')
 import Private.WeatherAPI_private as i
-#----------------------------------------------------------------\
+#----------------------------------------------------------------
 
 class Location:
     def __init__(self):

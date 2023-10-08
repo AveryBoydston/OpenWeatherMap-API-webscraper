@@ -38,13 +38,14 @@ def Driver():
         driver.getprecip()
         if driver.remaining_hours_in_the_day-12 > 0: #if 11am data exists
             driver.getmorning_ws()
+            driver.get_midday_wind_gust()
         if driver.remaining_hours_in_the_day-6 > 0: #if 5pm data exists
             driver.getmiddayws()
         driver.BackupResults()
 
         return driver.createmessage()
-    except: #in case an error occurs, like a recursive error, don't want that messing up my computer's performance or spamming my phone carrier
+    except: #in case an error occurs, like a recursive error, don't want that messing up my computer's performance or spamming the phone carrier
         return "an error occurred with Weather API program. Exited"
 
-#delete once verify it works well
+# main()
 print(Driver())
