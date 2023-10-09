@@ -3,9 +3,12 @@ from etext import send_sms_via_email
 import sys
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}')
-from Private.WeatherAPI_private import Number
+#from Private.WeatherAPI_private import Number
+from Private.WeatherAPI_private import  PushBulletKey
+from pushbullet import PushBullet
 
-'''
+#Google changed something about their SMPT authentication, which now making it more difficult to send automated text messages through their system
+''' 
 def main(): #sends sms message.-
     personal = Number()
     phone_number = personal.getnumber()
@@ -17,6 +20,13 @@ def main(): #sends sms message.-
     phone_number, message, provider, sender_credentials, subject="/"
     )
 '''
+
+
+def main():
+    personal = PushBulletKey()
+    API_KEY = personal.getAPI_KEY()
+    PushBullet(API_KEY).push_note('Weather', Driver())
+
 
 def Driver():
     try:
@@ -47,5 +57,4 @@ def Driver():
     except: #in case an error occurs, like a recursive error, don't want that messing up my computer's performance or spamming the phone carrier
         return "an error occurred with Weather API program. Exited"
 
-# main()
-print(Driver())
+main()

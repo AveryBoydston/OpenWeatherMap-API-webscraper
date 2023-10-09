@@ -234,7 +234,10 @@ class OpenWeatherMap:
                 file.write(f"current hour past 5pm: {self.current_hour}. No mid-day windspeed data.\n")
 
             file.write(f"Today's Max Wind Speed: {self.max_ws} at {self.hour_of_max_ws.strftime('%H:%M')}\n")
-            file.write(f"Mid-day, Expect wind gusts of up to {self.midday_wgust} at {self.hour_of_midday_wgust.strftime('%H:%M')}\n")
+            if self.remaining_hours_in_the_day-12 > 0:
+                file.write(f"Mid-day, Expect wind gusts of up to {self.midday_wgust} at {self.hour_of_midday_wgust.strftime('%H:%M')}\n")
+            else:
+                file.write(f"Expect wind gusts of up to {self.wind_gust} at {self.hour_of_wind_gust.strftime('%H:%M')}\n")
             file.write(f"Max wind gust: {self.wind_gust} at {self.hour_of_wind_gust.strftime('%H:%M')}\n")
 
             if self.precip > 0.75: #75% chance
@@ -252,7 +255,7 @@ class OpenWeatherMap:
     def createmessage(self):
         message= f'''Today's high: {self.temperature}°F\nFeels like: {self.feels_like}°F\nUVindex: {self.max_uvindex_today} @{self.hour_of_max_uvindex_today.strftime('%H:%M')}\n'''
 
-        if self.remaining_hours_in_the_day-6 > 0: 
+        if self.remaining_hours_in_the_day-6 > 0:
             message += f"Windspeed up to {self.midday_ws}mph @{self.hour_of_midday_ws.strftime('%H:%M')}\n"
             if self.remaining_hours_in_the_day-12 > 0: #11am to 5pm
                 message += f"with gusts of {self.midday_wgust}mph @{self.hour_of_midday_wgust.strftime('%H:%M')}\n"
