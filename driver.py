@@ -25,7 +25,7 @@ def main(): #sends sms message.-
 def main():
     personal = PushBulletKey()
     API_KEY = personal.getAPI_KEY()
-    PushBullet(API_KEY).push_note('Weather', Driver())
+    PushBullet(API_KEY).push_note('Today', Driver())
 
 
 def Driver():

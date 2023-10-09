@@ -253,7 +253,7 @@ class OpenWeatherMap:
 
 
     def createmessage(self):
-        message= f'''Today's high: {self.temperature}°F\nFeels like: {self.feels_like}°F\nUVindex: {self.max_uvindex_today} @{self.hour_of_max_uvindex_today.strftime('%H:%M')}\n'''
+        message= f'''High: {self.temperature}°F\nFeels like: {self.feels_like}°F\nUVindex: {self.max_uvindex_today} @{self.hour_of_max_uvindex_today.strftime('%H:%M')}\n'''
 
         if self.remaining_hours_in_the_day-6 > 0:
             message += f"Windspeed up to {self.midday_ws}mph @{self.hour_of_midday_ws.strftime('%H:%M')}\n"
