@@ -1,8 +1,8 @@
 import os
 
 def pickcomputer(): #when changing which computer I'm using
-    if os.path.exists("C:/Users/avboy/Documents/GitHub - Personal"): #laptop
-        directory = "C:/Users/avboy/Documents/GitHub - Personal"
+    if os.path.exists("C:/Users/avboy/Documents/GitHub_Personal"): #laptop
+        directory = "C:/Users/avboy/Documents/GitHub_Personal"
 
     elif os.path.exists("C:/Users/Avery B/"): #personal desktop pc
         directory = "C:/Users/Avery B/Documents/My Documents/GitHub"

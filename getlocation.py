@@ -1,7 +1,5 @@
 #retrieves the latitude and logitude for any location
-import sys
-import re
-import requests
+import sys, re, requests
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}/')
 import Private.WeatherAPI_private as i
