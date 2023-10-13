@@ -42,5 +42,5 @@ def D():
     # except: #in case an error occurs, like a recursive error, don't want that messing up my computer's performance or spamming the phone carrier
     #     return "an error occurred with Weather API program. Exited"
 
-main()
-# print(D())
+#main()
+print(D())

@@ -63,7 +63,7 @@ class OpenWeatherMap:
             file.write("Temperature in Farenheit (F)\n")
             file.write("Wind Speed in miles per hour (mph)\n" + '-'*40 + '\n')
 
-            for n in range(0,48): #range function excludes terminating value. captures hours 0-47
+            for n in range(0,48): #48 hours of hourly data
                 file.write(f"unix time:{self._doc['hourly'][n]['dt']}\n")
                 file.write(f"datetime:{datetime.fromtimestamp(self._doc['hourly'][n]['dt'])}\n")
 
@@ -75,19 +75,55 @@ class OpenWeatherMap:
     def today_and_tmrw_hours_index(self):
         self.current_hour = datetime.fromtimestamp(self._doc['current']['dt']).strftime("%H") #only returns the hour value
         self.today_remaining_hours = 24 - int(self.current_hour) #length/last index for remaining today's hours
+        self.tmrw_11pm = self.today_remaining_hours+23
 
-        self.lower_index_of_tomorrow_hours = self.today_remaining_hours+1
-        self.upper_index_of_tomorrow_hours = self.today_remaining_hours+23
+    def find_max_value_and_index(data, property_name, start_index, end_index):
+        max_value = max(data[i][property_name] for i in range(start_index, end_index))
+        max_index = next(i for i in range(start_index, end_index) if data[i][property_name] == max_value)
+        return max_value, max_index
 
+    def get_data(self, property_name, start_index, end_index, target_variable, data):
+        max_value, max_index = OpenWeatherMap.find_max_value_and_index(data, property_name, start_index, end_index)
+        setattr(self, target_variable, max_value)
+        setattr(self, f'index_of_{target_variable}', max_index)
+        setattr(self, f'hour_of_{target_variable}', datetime.fromtimestamp(data[max_index]['dt']))
 
-#functions to get different pieces of data. Each have their own ranges of times throughout the day, hence separate functions
+    def gettemperature(self):
+        self.get_data('temp', 0, self.today_remaining_hours - 3, 'temperature', self._doc['hourly'])
+
+    def getfeels_like(self):
+        self.get_data('feels_like', 0, self.today_remaining_hours - 3, 'feels_like', self._doc['hourly'])
+
+    def gettodaymaxuvindex(self):
+        self.get_data('uvi', 0, self.today_remaining_hours + 1, 'max_uvindex_today', self._doc['hourly'])
+
+    def getmorning_ws(self):
+        self.get_data('wind_speed', 0, self.today_remaining_hours - 11, 'morning_ws', self._doc['hourly'])
+
+    def getmiddayws(self):
+        self.get_data('wind_speed', 0, self.today_remaining_hours - 6, 'midday_ws', self._doc['hourly'])
+
+    def getmaxws(self):
+        self.get_data('wind_speed', 0, self.today_remaining_hours + 1, 'max_ws', self._doc['hourly'])
+
+    def getwind_gust(self):
+        self.get_data('wind_gust', 0, self.today_remaining_hours - 6, 'wind_gust', self._doc['hourly'])
+
+    def get_midday_wind_gust(self):
+        self.get_data('wind_gust', self.today_remaining_hours - 12, self.today_remaining_hours - 6, 'midday_wgust', self._doc['hourly'])
+
+    def getprecip(self):
+        self.get_data('pop', 0, self.today_remaining_hours - 6, 'precip', self._doc['hourly'])
+
+    '''
+    #functions to get different pieces of data. Each have their own ranges of times throughout the day, hence separate functions
     def gettemperature(self): #current hour to 7pm (19:00)
-        self.temperature = max(self._doc['hourly'][i]['temp'] for i in range(0,self.lower_index_of_tomorrow_hours-4))
+        self.temperature = max(self._doc['hourly'][i]['temp'] for i in range(0,self.today_remaining_hours-3))
 
         #finding index & hour of max temp
         temp = 0
         self.index_of_temperature = 0
-        for i in range(0,self.lower_index_of_tomorrow_hours-4):
+        for i in range(0,self.today_remaining_hours-3):
             temp = self._doc['hourly'][i]['temp']
             if temp == self.temperature:
                 break
@@ -95,12 +131,12 @@ class OpenWeatherMap:
         self.hour_of_temperature = datetime.fromtimestamp(self._doc['hourly'][self.index_of_temperature]['dt'])
  
     def getfeels_like(self): #current hour to 7pm (19:00)
-        self.feels_like = max(self._doc['hourly'][i]['feels_like'] for i in range(0,self.lower_index_of_tomorrow_hours-4))
+        self.feels_like = max(self._doc['hourly'][i]['feels_like'] for i in range(0,self.today_remaining_hours-3))
 
         #finding index & hour of max feels like
         feels = 0
         self.index_of_feels_like = 0
-        for i in range(0,self.lower_index_of_tomorrow_hours-4):
+        for i in range(0,self.today_remaining_hours-3):
             feels = self._doc['hourly'][i]['feels_like']
             if feels == self.feels_like:
                 break
@@ -110,12 +146,12 @@ class OpenWeatherMap:
 
 
     def gettodaymaxuvindex(self): #all day
-        self.max_uvindex_today = max([self._doc['hourly'][i]['uvi'] for i in range(0,self.lower_index_of_tomorrow_hours)]) #range function excludes 00:00 of next day
+        self.max_uvindex_today = max([self._doc['hourly'][i]['uvi'] for i in range(0,self.today_remaining_hours+1)]) #range function excludes 00:00 of next day
 
         #finding index & hour of max uvindex
         uv = 0
         self.index_of_max_uvindex_today = 0
-        for i in range(0,self.lower_index_of_tomorrow_hours):
+        for i in range(0,self.today_remaining_hours+1):
             uv = self._doc['hourly'][i]['uvi']
             if uv == self.max_uvindex_today:
                 break
@@ -124,13 +160,13 @@ class OpenWeatherMap:
         self.hour_of_max_uvindex_today = datetime.fromtimestamp(self._doc['hourly'][self.index_of_max_uvindex_today]['dt'])
 
 
-    def getmorning_ws(self): #current hour to 11am (11:00)
-        self.morning_ws = max([self._doc['hourly'][i]['wind_speed'] for i in range(0,self.today_remaining_hours-12)])
+    def getmorning_ws(self): #current hour to 11am (11:00) #changed time max limit
+        self.morning_ws = max([self._doc['hourly'][i]['wind_speed'] for i in range(0,self.today_remaining_hours-11)])
 
         #finding index & hour of morning windspeed
         ws = 0
         self.index_of_morning_ws = 0
-        for i in range(0,self.today_remaining_hours-12):
+        for i in range(0,self.today_remaining_hours-11):
             ws = self._doc['hourly'][i]['wind_speed']
             if ws == self.morning_ws:
                 break
@@ -155,12 +191,12 @@ class OpenWeatherMap:
 
 
     def getmaxws(self): #all day
-        self.max_ws = max([self._doc['hourly'][i]['wind_speed'] for i in range(0,self.today_remaining_hours)])
+        self.max_ws = max([self._doc['hourly'][i]['wind_speed'] for i in range(0,self.today_remaining_hours+1)])
 
         #finding index & hour of first occurence of max windspeed
         ws = 0
         self.index_of_max_ws = 0
-        for i in range(0,self.today_remaining_hours):
+        for i in range(0,self.today_remaining_hours+1):
             ws = self._doc['hourly'][i]['wind_speed']
             if ws == self.max_ws:
                 break
@@ -211,7 +247,7 @@ class OpenWeatherMap:
             self.index_of_precip += 1
 
         self.hour_of_precip = datetime.fromtimestamp(self._doc['hourly'][self.index_of_precip]['dt'])
-
+    '''
     def convertTime(time):
         '''convert 24-hour format  to 12-hour format with am/pm. Not using datetime formatting because I don't like it.'''
         if int(time.strftime('%H')) > 12: #afternoon
@@ -222,7 +258,8 @@ class OpenWeatherMap:
     def BackupResults(self):
         with open(f'{self.saveFolder}/{self._city} {self.currentTime}.txt',"a") as file:
 
-            #Additional data
+            #---- Saving Results ----
+            #Temperature, UVindex
             file.write("\nAdditional Info:\n" + "-"*40 + "\n")
             file.write(f"Today's High (F): {self.temperature} at {OpenWeatherMap.convertTime(self.hour_of_temperature)}\n")
             file.write(f"Feels Like: {self.feels_like} at {OpenWeatherMap.convertTime(self.hour_of_feels_like)}\n")
