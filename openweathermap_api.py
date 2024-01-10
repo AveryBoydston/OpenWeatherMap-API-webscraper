@@ -2,27 +2,30 @@ import sys, re, requests
 from datetime import datetime
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}')
-import Private.WeatherAPI_private as i
+import Private.OWM_Weather_Notification.WeatherAPI_private as i
 #----------------------------------------------------------------------------
 
 class OpenWeatherMap:
     def __init__(self):
         privatekey = i.OWMapKey()
         self.__key = privatekey.getkey()
-        self.saveFolder = f"{directory}/Weather_API_webscraper/save files/openweathermap req savefiles" #save folder for API results
-        self.currentTime = datetime.now().strftime("%m-%d-%Y %I.%M%p") #used for naming save file
+        self.save_folder = f"{directory}/Weather_API_webscraper/save files/openweathermap req savefiles"
+        self.current_time = datetime.now().strftime("%m-%d-%Y %I.%M%p") #used for naming save file
 
     def getkey(self):
+        '''returns personal API key for OpenWeatherMap'''
         return self.__key
 
-    def chooselocation(self): #getlocation file
+    def chooselocation(self):
+        '''If called, allows the user to choose the location they want information about'''
         from getlocation import latitude,longitude,city,cityinfo
         self._city = city
         self._cityinfo = cityinfo
         self._lat = latitude
         self._long = longitude
 
-    def defaultlocation(self): #personal use
+    def defaultlocation(self):
+        '''for personal use. defaulted to locations relevant to my data collection'''
         privatelocation = i.DefaultLocation()
         self._location = privatelocation.getLocation()
 
@@ -30,6 +33,7 @@ class OpenWeatherMap:
         self._city = self._location[2]
 
     def OWMap_getrequest(self):
+        '''accesses OpenWeatherMap API with specified location and parameters'''
         self._url = f"https://api.openweathermap.org/data/3.0/onecall?lat={self._lat}&lon={self._long}&exclude=daily,minutely,alerts&units=imperial&appid={self.getkey()}"
         req = requests.get(self._url)
         if req.status_code == 200:
@@ -37,7 +41,7 @@ class OpenWeatherMap:
         else:
             print(f"An error occurred when sending a get request to OpenWeatherMap's api. Error code: {req.status_code}")
             quit()
-        
+
     def getspecifiedinfo(self,info):
         '''apiterms dictionary converts inputted terms to accessible terms in the API results. The file write
             portion saves the next 48 hours of selected data to a local savefile in a predetermined save location.'''
@@ -54,7 +58,7 @@ class OpenWeatherMap:
             "uv index" : "uvi"
         }
 
-        with open(f'{self.saveFolder}/{self._city} {self.currentTime}.txt',"w") as file:
+        with open(f'{self.save_folder}/{self._city} {self.current_time}.txt',"w") as file:
             file.write(f"City: {self._city}\n")# in {cityinfo}\n\n")
             file.write(f"Current time: {datetime.now().strftime('%D %I:%M%p')}\n\n")
 
@@ -76,6 +80,7 @@ class OpenWeatherMap:
         self.current_hour = datetime.fromtimestamp(self._doc['current']['dt']).strftime("%H") #only returns the hour value
         self.today_remaining_hours = 24 - int(self.current_hour) #length/last index for remaining today's hours
 
+<<<<<<< Updated upstream
         self.lower_index_of_tomorrow_hours = self.today_remaining_hours+1
         self.upper_index_of_tomorrow_hours = self.today_remaining_hours+23
 
@@ -212,15 +217,60 @@ class OpenWeatherMap:
 
         self.hour_of_precip = datetime.fromtimestamp(self._doc['hourly'][self.index_of_precip]['dt'])
 
+=======
+
+    def find_max_value_and_index(data, property_name, start_index, end_index):
+        '''for each inputted item, return max for the day and when it occurs'''
+        max_value = max(data[i][property_name] for i in range(start_index, end_index))
+        max_index = next(i for i in range(start_index, end_index) if data[i][property_name] == max_value)
+        return max_value, max_index
+
+
+    def get_data(self, property_name, start_index, end_index, target_variable, data):
+        max_value, max_index = OpenWeatherMap.find_max_value_and_index(data, property_name, start_index, end_index)
+        setattr(self, target_variable, max_value)
+        setattr(self, f'index_of_{target_variable}', max_index)
+        setattr(self, f'hour_of_{target_variable}', datetime.fromtimestamp(data[max_index]['dt']))
+
+
+    def gettemperature(self):
+        self.get_data('temp', 0, self.today_remaining_hours - 3, 'temperature', self._doc['hourly'])
+
+    def getfeels_like(self):
+        self.get_data('feels_like', 0, self.today_remaining_hours - 3, 'feels_like', self._doc['hourly'])
+
+    def gettodaymaxuvindex(self):
+        self.get_data('uvi', 0, self.today_remaining_hours + 1, 'max_uvindex_today', self._doc['hourly'])
+
+    def getmorning_ws(self):
+        self.get_data('wind_speed', 0, self.today_remaining_hours - 11, 'morning_ws', self._doc['hourly'])
+
+    def getmiddayws(self):
+        self.get_data('wind_speed', 0, self.today_remaining_hours - 6, 'midday_ws', self._doc['hourly'])
+
+    def getmaxws(self):
+        self.get_data('wind_speed', 0, self.today_remaining_hours + 1, 'max_ws', self._doc['hourly'])
+
+    def getwind_gust(self):
+        self.get_data('wind_gust', 0, self.today_remaining_hours - 6, 'wind_gust', self._doc['hourly'])
+
+    def get_midday_wind_gust(self):
+        self.get_data('wind_gust', self.today_remaining_hours - 12, self.today_remaining_hours - 6, 'midday_wgust', self._doc['hourly'])
+
+    def getprecip(self):
+        self.get_data('pop', 0, self.today_remaining_hours - 6, 'precip', self._doc['hourly'])
+
+
+>>>>>>> Stashed changes
     def convertTime(time):
-        '''convert 24-hour format  to 12-hour format with am/pm. Not using datetime formatting because I don't like it.'''
+        '''convert 24-hour format  to 12-hour am/pm. Not using datetime module because I don't like the format.'''
         if int(time.strftime('%H')) > 12: #afternoon
             return f"{int(time.strftime('%H')) - 12}pm"
         else:
             return f"{int(time.strftime('%H'))}am"
 
     def BackupResults(self):
-        with open(f'{self.saveFolder}/{self._city} {self.currentTime}.txt',"a") as file:
+        with open(f'{self.save_folder}/{self._city} {self.current_time}.txt',"a") as file:
 
             #Additional data
             file.write("\nAdditional Info:\n" + "-"*40 + "\n")
@@ -260,7 +310,7 @@ class OpenWeatherMap:
             file.write(str(self._doc))
 
 
-    def createmessage(self): #message with all the information I want to know about.
+    def createMessage(self): #message with all the information I want to know about.
         message= (f"High: {self.temperature}°F\n"
                   + f"Real Feel: {self.feels_like}°F\n"
                   + f"UVindex: {self.max_uvindex_today} @ {OpenWeatherMap.convertTime(self.hour_of_max_uvindex_today)}\n")
@@ -271,11 +321,11 @@ class OpenWeatherMap:
                 message += f" gusts of: {self.midday_wgust}mph @ {OpenWeatherMap.convertTime(self.hour_of_midday_wgust)}\n"
             else: #executes after 5pm
                 message += f" gusts of: {self.wind_gust}mph @ {OpenWeatherMap.convertTime(self.hour_of_wind_gust)}\n"
-            if self.midday_ws >= 15:
-                message+= "Not a good day to wear certain attire.\n"
+            if self.midday_ws >= 11:
+                message+= "Windspeed is too high.\n"
         
         if self.precip < 0.75:
-            message += f"No rain. {self.precip*100}% chance\n"
+            message += f"Don't expect rain today. {self.precip*100}% chance\n"
         elif self.precip >= 0.90:
             message += f"Rain today at {OpenWeatherMap.convertTime(self.hour_of_precip)}. {self.precip*100}% chance\n"
         else: # 0.75 <= self.precip < 0.90

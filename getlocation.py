@@ -2,7 +2,7 @@
 import sys, re, requests
 from pickcomputer import directory
 sys.path.insert(0, f'{directory}/')
-import Private.WeatherAPI_private as i
+import Private.OWM_Weather_Notification.WeatherAPI_private as i
 #----------------------------------------------------------------
 
 class Location:
